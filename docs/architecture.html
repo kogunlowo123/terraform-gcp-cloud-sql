@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture - terraform-gcp-cloud-sql</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0c0b;color:#f5f2eb;font-family:'SF Mono','Fira Code','Cascadia Code',Consolas,monospace;line-height:1.6;padding:0}
+a{color:#c8420a;text-decoration:none}a:hover{text-decoration:underline}
+.container{max-width:1200px;margin:0 auto;padding:2rem}
+.badge-bar{background:#111;border-bottom:2px solid #c8420a;padding:0.75rem 2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.badge-bar img{height:28px}
+.badge-bar span{font-size:0.85rem;color:#aaa}
+h1{font-size:2rem;color:#c8420a;margin:1.5rem 0 0.5rem;border-bottom:1px solid #222;padding-bottom:0.5rem}
+h2{font-size:1.4rem;color:#c8420a;margin:2rem 0 1rem;border-bottom:1px solid #1a1a1a;padding-bottom:0.4rem}
+h3{font-size:1.1rem;color:#e8e0d4;margin:1.2rem 0 0.6rem}
+p,li{font-size:0.95rem;color:#ccc}
+ul{padding-left:1.5rem;margin:0.5rem 0}
+li{margin:0.3rem 0}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1rem 0}
+.card{background:#141514;border:1px solid #222;border-radius:8px;padding:1.2rem;transition:border-color 0.2s}.card:hover{border-color:#c8420a}
+.card h3{margin:0 0 0.5rem;font-size:1rem;color:#c8420a}
+.card p{font-size:0.85rem;color:#aaa;margin:0}
+.arch-diagram{background:#111;border:1px solid #222;border-radius:8px;padding:2rem;margin:1.5rem 0;overflow-x:auto}
+.flow{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:0.5rem}
+.flow-box{background:#1a1b1a;border:2px solid #333;border-radius:6px;padding:0.8rem 1.2rem;text-align:center;font-size:0.85rem;min-width:130px}
+.flow-box.accent{border-color:#c8420a;color:#c8420a;font-weight:bold}
+.flow-box.green{border-color:#34a853;color:#34a853}
+.flow-box.blue{border-color:#4285f4;color:#4285f4}
+.flow-box.purple{border-color:#9c27b0;color:#9c27b0}
+.flow-box.yellow{border-color:#fbbc04;color:#fbbc04}
+.flow-box.red{border-color:#ea4335;color:#ea4335}
+.flow-arrow{color:#555;font-size:1.5rem;display:flex;align-items:center;padding:0 0.2rem}
+.flow-col{display:flex;flex-direction:column;gap:0.5rem;align-items:center}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.85rem}
+th{background:#1a1b1a;color:#c8420a;padding:0.6rem 0.8rem;text-align:left;border:1px solid #222}
+td{padding:0.6rem 0.8rem;border:1px solid #222;color:#ccc}
+tr:nth-child(even){background:#111}
+code{background:#1a1b1a;padding:0.15rem 0.4rem;border-radius:3px;font-size:0.85rem;color:#e8e0d4}
+pre{background:#111;border:1px solid #222;border-radius:6px;padding:1rem;overflow-x:auto;margin:1rem 0}
+pre code{background:none;padding:0}
+.checklist{list-style:none;padding-left:0}
+.checklist li{padding:0.4rem 0;padding-left:1.8rem;position:relative}
+.checklist li::before{content:'[ ]';position:absolute;left:0;color:#c8420a;font-weight:bold}
+.section{margin:2rem 0}
+.footer{border-top:1px solid #222;margin-top:3rem;padding-top:1rem;text-align:center;font-size:0.8rem;color:#555}
+.exec-summary{background:#141514;border-left:4px solid #c8420a;padding:1.2rem 1.5rem;margin:1rem 0;border-radius:0 6px 6px 0}
+.exec-summary p{color:#ccc;font-size:0.95rem}
+</style>
+</head>
+<body>
+<div class="badge-bar">
+<img src="https://img.shields.io/badge/Google_Cloud-4285F4?style=flat&logo=googlecloud&logoColor=white" alt="GCP">
+<img src="https://img.shields.io/badge/Terraform-7B42BC?style=flat&logo=terraform&logoColor=white" alt="Terraform">
+<span>terraform-gcp-cloud-sql</span>
+<span style="margin-left:auto;color:#555">Architecture Document</span>
+</div>
+<div class="container">
+
+<h1>Cloud SQL Module</h1>
+
+<div class="section">
+<h2>Executive Summary</h2>
+<div class="exec-summary">
+<p>A production-ready Terraform module for deploying managed relational databases on Google Cloud SQL. Supports PostgreSQL 15 and MySQL 8.0 with high availability (REGIONAL), independently-sized read replicas, Private Service Networking for private IP connectivity, automated backups with point-in-time recovery, configurable maintenance windows, Query Insights for performance monitoring, database flags for engine tuning, and multi-database/user provisioning within a single instance.</p>
+</div>
+</div>
+
+<div class="section">
+<h2>Overview</h2>
+<div class="card-grid">
+<div class="card"><h3>Provider</h3><p>google >= 5.10</p></div>
+<div class="card"><h3>Terraform</h3><p>>= 1.5.0</p></div>
+<div class="card"><h3>Engines</h3><p>PostgreSQL 15, MySQL 8.0</p></div>
+<div class="card"><h3>HA</h3><p>REGIONAL (multi-zone) / ZONAL</p></div>
+<div class="card"><h3>Networking</h3><p>Private IP via PSN + Public IP with authorized networks</p></div>
+<div class="card"><h3>Backup</h3><p>Automated + PITR with 7-day retention</p></div>
+</div>
+</div>
+
+<div class="section">
+<h2>Architecture Diagram</h2>
+<div class="arch-diagram">
+<div class="flow">
+<div class="flow-col">
+<div class="flow-box">Application</div>
+</div>
+<div class="flow-arrow">&#9654;</div>
+<div class="flow-col">
+<div class="flow-box blue">Private Service Networking</div>
+</div>
+<div class="flow-arrow">&#9654;</div>
+<div class="flow-col">
+<div class="flow-box red">Cloud SQL Primary</div>
+<div class="flow-box" style="font-size:0.75rem;border-color:#555">(HA: REGIONAL)</div>
+</div>
+</div>
+<br>
+<div class="flow">
+<div class="flow-col">
+<div class="flow-box red">Primary Instance</div>
+</div>
+<div class="flow-arrow">&#9654;</div>
+<div class="flow-col">
+<div class="flow-box green">Databases</div>
+<div class="flow-box green">Users</div>
+</div>
+<div class="flow-arrow" style="margin-left:2rem">|</div>
+<div class="flow-col">
+<div class="flow-box yellow">Read Replica 1</div>
+<div class="flow-box yellow">Read Replica 2</div>
+</div>
+</div>
+<br>
+<div class="flow">
+<div class="flow-col">
+<div class="flow-box red">Primary</div>
+</div>
+<div class="flow-arrow">&#9654;</div>
+<div class="flow-col">
+<div class="flow-box purple">Automated Backups</div>
+<div class="flow-box purple">Point-in-Time Recovery</div>
+</div>
+<div class="flow-arrow" style="margin-left:2rem">|</div>
+<div class="flow-col">
+<div class="flow-box blue">Query Insights</div>
+<div class="flow-box blue">Maintenance Window</div>
+</div>
+</div>
+<br>
+<div class="flow">
+<div class="flow-col">
+<div class="flow-box blue">VPC Network</div>
+</div>
+<div class="flow-arrow">&#9654;</div>
+<div class="flow-col">
+<div class="flow-box">Global Compute Address</div>
+</div>
+<div class="flow-arrow">&#9654;</div>
+<div class="flow-col">
+<div class="flow-box blue">Service Networking Connection</div>
+</div>
+<div class="flow-arrow">&#9654;</div>
+<div class="flow-col">
+<div class="flow-box red">Cloud SQL (Private IP)</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h2>Component Breakdown</h2>
+<h3>google_sql_database_instance.this</h3>
+<p>Primary Cloud SQL instance with configurable engine version, machine tier, SSD/HDD disk with autoresize, REGIONAL or ZONAL availability, SSL enforcement, authorized networks, backup configuration (schedule, retention, PITR), maintenance windows, Query Insights, and custom database flags.</p>
+<h3>google_sql_database.this</h3>
+<p>Multiple databases per instance with configurable charset and collation.</p>
+<h3>google_sql_user.this</h3>
+<p>Database users with password and type (BUILT_IN, CLOUD_IAM_USER, CLOUD_IAM_SERVICE_ACCOUNT).</p>
+<h3>google_sql_database_instance.read_replica</h3>
+<p>Read replicas inheriting the primary's engine version with independent tier, disk size, disk type, and availability type settings. Non-failover replicas for read scaling.</p>
+<h3>Private Service Networking</h3>
+<p>google_compute_global_address for VPC peering range allocation + google_service_networking_connection for Private Services Access to Cloud SQL.</p>
+</div>
+
+<div class="section">
+<h2>Data Flow</h2>
+<ul>
+<li><strong>Write Path:</strong> Applications connect to the primary instance via private IP (PSN) or public IP (authorized networks). Writes are processed by the primary and replicated to read replicas.</li>
+<li><strong>Read Path:</strong> Read-heavy workloads are distributed across read replicas using separate connection names, reducing primary load.</li>
+<li><strong>Backup:</strong> Automated backups run daily at configurable start time with 7-day retention. Transaction logs are retained for point-in-time recovery.</li>
+<li><strong>Failover:</strong> REGIONAL availability type provides automatic failover to a standby in a different zone within the same region.</li>
+<li><strong>Maintenance:</strong> Scheduled maintenance windows (day/hour) with canary or stable update tracks minimize disruption.</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Security Controls</h2>
+<table>
+<tr><th>Control</th><th>Implementation</th></tr>
+<tr><td>Encryption in Transit</td><td><code>require_ssl = true</code> enforces SSL/TLS for all connections</td></tr>
+<tr><td>Encryption at Rest</td><td>Google-managed encryption by default (CMEK available via database flags)</td></tr>
+<tr><td>Network Isolation</td><td>Private IP via Private Service Networking; public IP with IP-based allowlists</td></tr>
+<tr><td>Authentication</td><td>Built-in users, Cloud IAM users, Cloud IAM service accounts</td></tr>
+<tr><td>Deletion Protection</td><td><code>deletion_protection = true</code> (default) prevents accidental deletion</td></tr>
+<tr><td>Backup & Recovery</td><td>Automated daily backups + PITR with configurable retention</td></tr>
+<tr><td>Monitoring</td><td>Query Insights for query performance analysis and optimization</td></tr>
+</table>
+</div>
+
+<div class="section">
+<h2>Industry Adaptation</h2>
+<ul>
+<li><strong>Financial Services:</strong> REGIONAL HA for zero-downtime, SSL enforcement, private IP only, PITR for RPO compliance, read replicas for reporting workloads.</li>
+<li><strong>Healthcare:</strong> Private networking only (no public IP), IAM-based authentication, automated backups with extended retention for HIPAA compliance.</li>
+<li><strong>E-Commerce:</strong> Read replicas for catalog queries during peak traffic, autoresize disks for growing order databases, Query Insights for slow query optimization.</li>
+<li><strong>SaaS:</strong> Multi-database instances for tenant isolation, database flags for connection pooling, stable maintenance track for predictable updates.</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Production Readiness Checklist</h2>
+<ul class="checklist">
+<li>Set <code>availability_type = "REGIONAL"</code> for high availability</li>
+<li>Enable <code>deletion_protection = true</code> (default)</li>
+<li>Configure private IP with Private Service Networking</li>
+<li>Disable public IP (<code>enable_public_ip = false</code>) in production</li>
+<li>Enforce SSL connections (<code>require_ssl = true</code>)</li>
+<li>Enable automated backups with PITR</li>
+<li>Set backup retention to at least 7 days</li>
+<li>Configure maintenance window during low-traffic hours</li>
+<li>Enable Query Insights for performance monitoring</li>
+<li>Deploy at least one read replica for read-heavy workloads</li>
+<li>Enable disk autoresize with an appropriate limit</li>
+<li>Use IAM-based authentication where possible</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Configuration Reference</h2>
+<h3>Required Variables</h3>
+<table>
+<tr><th>Name</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>project_id</code></td><td>string</td><td>GCP project ID</td></tr>
+<tr><td><code>instance_name</code></td><td>string</td><td>Cloud SQL instance name</td></tr>
+</table>
+<h3>Key Optional Variables</h3>
+<table>
+<tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>database_version</code></td><td>string</td><td>POSTGRES_15</td><td>Database engine version</td></tr>
+<tr><td><code>tier</code></td><td>string</td><td>db-f1-micro</td><td>Machine tier</td></tr>
+<tr><td><code>availability_type</code></td><td>string</td><td>ZONAL</td><td>REGIONAL for HA, ZONAL for single zone</td></tr>
+<tr><td><code>enable_private_ip</code></td><td>bool</td><td>false</td><td>Enable private IP via PSN</td></tr>
+<tr><td><code>databases</code></td><td>map(object)</td><td>{}</td><td>Databases to create</td></tr>
+<tr><td><code>users</code></td><td>map(object)</td><td>{}</td><td>Database users to create</td></tr>
+<tr><td><code>read_replicas</code></td><td>map(object)</td><td>{}</td><td>Read replica definitions</td></tr>
+</table>
+<h3>Outputs</h3>
+<table>
+<tr><th>Name</th><th>Description</th></tr>
+<tr><td><code>instance_name</code></td><td>Cloud SQL instance name</td></tr>
+<tr><td><code>instance_connection_name</code></td><td>Connection name for Cloud SQL Proxy</td></tr>
+<tr><td><code>private_ip_address</code></td><td>Private IP address</td></tr>
+<tr><td><code>public_ip_address</code></td><td>Public IP address</td></tr>
+<tr><td><code>database_names</code></td><td>List of created database names</td></tr>
+<tr><td><code>read_replica_names</code></td><td>Map of read replica names</td></tr>
+</table>
+</div>
+
+<div class="section">
+<h2>Deployment</h2>
+<pre><code>module "cloud_sql" {
+  source = "github.com/kogunlowo123/terraform-gcp-cloud-sql"
+
+  project_id       = "my-project"
+  instance_name    = "prod-postgres"
+  database_version = "POSTGRES_15"
+  region           = "us-central1"
+  tier             = "db-custom-4-16384"
+  availability_type = "REGIONAL"
+  disk_size        = 100
+  disk_type        = "PD_SSD"
+
+  enable_private_ip = true
+  enable_public_ip  = false
+  private_network   = "projects/my-project/global/networks/default"
+  require_ssl       = true
+
+  backup_enabled                 = true
+  point_in_time_recovery_enabled = true
+  retained_backups               = 14
+
+  databases = {
+    "myapp"     = {}
+    "analytics" = {}
+  }
+
+  users = {
+    "appuser" = { password = "secure-password" }
+  }
+
+  read_replicas = {
+    "replica-1" = { tier = "db-custom-2-8192" }
+  }
+
+  insights_config = {
+    query_insights_enabled  = true
+    record_application_tags = true
+    record_client_address   = true
+  }
+
+  labels = { team = "backend", env = "production" }
+}</code></pre>
+</div>
+
+<div class="section">
+<h2>Links</h2>
+<ul>
+<li><a href="https://cloud.google.com/sql/docs">Cloud SQL Documentation</a></li>
+<li><a href="https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/sql_database_instance">Terraform google_sql_database_instance</a></li>
+<li><a href="https://cloud.google.com/sql/docs/postgres/configure-private-ip">Private IP Configuration</a></li>
+<li><a href="../README.md">Module README</a></li>
+</ul>
+</div>
+
+<div class="footer">
+<p>terraform-gcp-cloud-sql &middot; Architecture Document &middot; Generated 2026-03-15</p>
+<p style="color:#333;margin-top:0.3rem">Built for Google Cloud Platform</p>
+</div>
+</div>
+</body>
+</html>
