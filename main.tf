@@ -31,18 +31,18 @@ resource "google_sql_database_instance" "this" {
   deletion_protection = var.deletion_protection
 
   settings {
-    tier              = var.tier
-    disk_size         = var.disk_size
-    disk_type         = var.disk_type
-    disk_autoresize   = var.disk_autoresize
+    tier                 = var.tier
+    disk_size            = var.disk_size
+    disk_type            = var.disk_type
+    disk_autoresize      = var.disk_autoresize
     disk_autoresize_limit = var.disk_autoresize_limit
-    availability_type = var.availability_type
-    user_labels       = local.default_labels
+    availability_type    = var.availability_type
+    user_labels          = var.labels
 
     ip_configuration {
-      ipv4_enabled    = var.enable_public_ip
-      private_network = var.enable_private_ip ? var.private_network : null
-      require_ssl     = var.require_ssl
+      ipv4_enabled       = var.enable_public_ip
+      private_network    = var.enable_private_ip ? var.private_network : null
+      require_ssl        = var.require_ssl
       allocated_ip_range = var.allocated_ip_range
 
       dynamic "authorized_networks" {
@@ -58,7 +58,7 @@ resource "google_sql_database_instance" "this" {
       enabled                        = var.backup_enabled
       start_time                     = var.backup_start_time
       location                       = var.backup_location
-      point_in_time_recovery_enabled = local.is_postgres ? var.point_in_time_recovery_enabled : false
+      point_in_time_recovery_enabled = startswith(var.database_version, "POSTGRES") ? var.point_in_time_recovery_enabled : false
       transaction_log_retention_days = var.transaction_log_retention_days
 
       backup_retention_settings {
@@ -141,7 +141,7 @@ resource "google_sql_database_instance" "read_replica" {
     disk_type         = coalesce(each.value.disk_type, var.disk_type)
     disk_autoresize   = var.disk_autoresize
     availability_type = each.value.availability_type
-    user_labels       = local.default_labels
+    user_labels       = var.labels
 
     ip_configuration {
       ipv4_enabled    = var.enable_public_ip
