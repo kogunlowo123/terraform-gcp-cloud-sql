@@ -1,3 +1,9 @@
+![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-blueviolet?logo=terraform)
+![GCP](https://img.shields.io/badge/GCP-4285F4?logo=googlecloud&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
+![CI](https://img.shields.io/github/actions/workflow/status/kogunlowo123/terraform-gcp-cloud-sql/terraform-ci.yml?label=CI)
+![GitHub release](https://img.shields.io/github/v/release/kogunlowo123/terraform-gcp-cloud-sql)
+
 # Terraform GCP Cloud SQL
 
 Terraform module for deploying Cloud SQL instances on Google Cloud Platform with support for PostgreSQL and MySQL, high availability, read replicas, private IP networking, and automated backups.
